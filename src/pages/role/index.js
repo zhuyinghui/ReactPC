@@ -1,7 +1,7 @@
 import React from 'react';
-function User(){
+function Role(){
     return(
-        <div>用户管理页</div>
+        <div>角色管理页</div>
     )
 }
-export default User
+export default Role

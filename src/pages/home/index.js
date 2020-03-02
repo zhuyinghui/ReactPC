@@ -1,15 +1,15 @@
 import React from 'react';
 import Header from '../../components/header'
-import Footer from '../../components/footer';
-import Menu from '../../components/menu';
+import Menu from '../../components/menu_bar'
+import RouterConfig from '../../router'
 function Home(){
     return(
         <div>
-            <ul>
-                <li><Header></Header></li>
-                <li><Menu></Menu></li>
-                <li><Footer></Footer></li>
-            </ul>
+            <Header></Header>
+            <Menu></Menu>
+            <a href="/home/user">用户</a>
+            <a href="/home/role">角色</a>
+            <RouterConfig></RouterConfig>
         </div>
     )
 }
