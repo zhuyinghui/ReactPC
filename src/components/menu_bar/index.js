@@ -1,98 +1,86 @@
 import React from 'react'; 
-import { Menu, Button } from 'antd';
-import {
-  AppstoreOutlined,
-  MenuUnfoldOutlined,
-  MenuFoldOutlined,
-  GlobalOutlined
-} from '@ant-design/icons';
+import { Menu } from 'antd';
+
 import { useState,useEffect } from 'react';
-import { Link } from 'react-router-dom'
-import './index.css'
+// withRouter包装组件用来获取props
+import { Link,withRouter } from 'react-router-dom'
+
+import menuList from './config'
 
 const { SubMenu } = Menu;
 
-function MenuBar(){
-    const [collapsed, setCollapsed] = useState(0);
-    useEffect(() => {
-        console.log(collapsed)
-    });
-    const menuList=[
-      {
-        name:'系统管理',
-        path:'',
-        icon:GlobalOutlined,
-        children:[
-          {
-            name:'权限管理',
-            path:'/index/limit'
-          },
-          {
-            name:'角色管理',
-            path:'/index/limit'
-          }
-        ]
+
+function MenuBar(props){
+  //获取路由，让菜单栏选中路由对应页
+  const reg=/\/[a-zA-Z]*/
+  const path=props.location.pathname
+  const firstPath=path.match(reg)[0]
+
+
+  //切换菜单时自动收起其他菜单项
+  const rootSubmenuKeys = ['/system', '/organization', '/income','/person','/product','/customer']
+  const [openKeys, setOpenKeys] = useState([firstPath]) //当前展开的 SubMenu 菜单项 key 数组
+  const onOpenChange = openKey => {
+    const latestOpenKey = openKey.find(key => openKeys.indexOf(key) === -1);
+      if (rootSubmenuKeys.indexOf(latestOpenKey) === -1) {
+        setOpenKeys(openKey)
+      } else {
+        setOpenKeys(latestOpenKey ? [latestOpenKey] : [])
       }
-    ]
-    const getMenu=()=>{
-      return(
-          <SubMenu
-              key="sub1"
-              title={
-                <span>
-                  <GlobalOutlined />
-                  <span>系统管理</span>
-                </span>
-              }
-            >
-              <Menu.Item key="1">
-                <Link to="/limit">
-                  权限管理
-                  </Link>
-              </Menu.Item>
-              <Menu.Item key="2">
-                <Link to="/role">
-                  角色管理
+  };
+
+  const [selectedKeys]=useState([path]) //当前选中的菜单项 key 数组
+
+    
+    useEffect(() => {
+        // 生命周期钩子
+    });
+    
+
+    const getMenu=(menuList)=>{
+      return menuList.map(item=>{
+        if(!item.children){
+          return(
+            <Menu.Item key={item.key}>
+                <Link to={item.key}>
+                  {item.title}
                 </Link>
-              </Menu.Item>
+            </Menu.Item>
+          )
+        }
+        else{
+          return(
+            <SubMenu
+                key={item.key}
+                title={
+                  <span>
+                    <span>{item.title}</span>
+                  </span>
+                }
+              >
+                {
+                  getMenu(item.children)
+                }
             </SubMenu>
-          // <SubMenu
-          //   key="sub2"
-          //   title={
-          //     <span>
-          //       <AppstoreOutlined />
-          //       <span>组织管理</span>
-          //     </span>
-          //   }
-          // >
-          //   <Menu.Item key="3">
-          //       门店管理
-          //       </Menu.Item>
-          //   <Menu.Item key="4">
-          //       会员管理
-          //       </Menu.Item>
-          // </SubMenu>
-      )
+          )
+        }
+      })
     }
     return(
-        <div style={{ width: 256 }} className="menu-bar">
-        <Button type="primary" onClick={()=>setCollapsed(!collapsed)} style={{ marginBottom: 16 }}>
-          {React.createElement(collapsed? MenuUnfoldOutlined : MenuFoldOutlined)}
-          Click
-        </Button>
+        <div className="menu-bar">
+          <div style={{color:'#fff',height:64,textAlign:"center",lineHeight:'64px',fontSize:24}}>后台管理系统</div>
         <Menu
-          defaultSelectedKeys={['1']}
-          defaultOpenKeys={['sub1']}
+          openKeys={openKeys}
+          defaultSelectedKeys={selectedKeys}
+          onOpenChange={onOpenChange}
           mode="inline"
           theme="dark"
-          inlineCollapsed={collapsed}
         >
           {
-            getMenu()
+            getMenu(menuList)
           }
-          
         </Menu>
       </div>
     )
 }
-export default MenuBar
+export default withRouter(MenuBar)

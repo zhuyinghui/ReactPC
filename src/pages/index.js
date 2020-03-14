@@ -1,15 +1,29 @@
-import React from 'react';
-import Header from '../components/header'
+import React from 'react'
+import Head from '../components/header'
 import Menu from '../components/menu_bar'
-import RouterConfig from '../router';
+import RouterConfig from '../router'
 
-function Home(){
+import { Layout } from 'antd';
+const { Header, Footer, Sider, Content } = Layout;
+
+function Index(){
     return(
         <div>
-            <Header></Header>
-            <Menu></Menu>
-            <RouterConfig></RouterConfig>
+            <Layout>
+                <Sider>
+                    <Menu></Menu>
+                </Sider>
+                <Layout>
+                    <Header>
+                        <Head></Head>
+                    </Header>
+                    <Content>
+                        <RouterConfig></RouterConfig>
+                    </Content>
+                    <Footer>Footer</Footer>
+                </Layout>
+            </Layout>
         </div>
     )
 }
-export default Home
+export default Index
