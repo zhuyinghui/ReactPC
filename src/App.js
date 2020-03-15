@@ -1,12 +1,10 @@
 import React from 'react'
-import './App.css'
+import './App.scss'
 import './static/css/reset.css'
 import 'antd/dist/antd.css'
-import { Route, Switch,BrowserRouter, Redirect} from "react-router-dom"
+import { Route, Switch,BrowserRouter} from "react-router-dom"
 import Index from './pages/index'
 import Login from './pages/login/index'
-
-
 
 function App() {
   return (
@@ -15,7 +13,6 @@ function App() {
         <Switch>
             <Route path="/login" component={Login}/>
             <Route path="/" component={Index}/>
-
         </Switch>
       </BrowserRouter>
     </div>
