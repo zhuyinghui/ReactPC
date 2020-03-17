@@ -1,15 +1,20 @@
-import { React,useState,useEffect } from 'react'
-import { Table,Button,Modal,Form,Input,Select,Option } from 'antd'
+import React from 'react'
+import { useState,useEffect,useRef } from 'react'
+import { Table,Button,Modal,Form,Input,Select } from 'antd'
 import { getLimit } from '../../../static/js/limitReq'
 import { withRouter } from 'react-router-dom'
+const { Option } = Select;
 
-function Limit(props){
+function Limit(){
     const [dataSource,setdataSource]=useState([]) //表格数据
     useEffect(()=>{
         getLimit().then(res=>{
+            for(let i of res){
+                i.key=i._id
+            }
             setdataSource(res)
         })
-    })
+    },[])
     const columns = [
         {
             title: '权限名称',
@@ -25,72 +30,105 @@ function Limit(props){
             title: '权限类型',
             dataIndex: 'limitType',
             key: 'limitType',
+            render:(d)=>{
+                if(d===1){
+                    return '页面权限'
+                }else if(d===2){
+                    return '数据权限'
+                }else{
+                    return '操作权限'
+                }
+            }
         },
         {
             title:'操作',
             key: 'action',
-            render: (text, record) => (
+            render: (data) => (
                 <span>
-                    <Button type="primary" size="small">修改</Button>
+                    <Button type="primary" size="small" onClick={()=>changeRow(data)}>修改</Button>
                     <Button type="primary" size="small" danger>删除</Button>
                 </span>
             ),
         }
     ]
     const [visible,setvisible]=useState(false) //新增弹窗是否可见
-    const showModel=()=>{
+    const showModal=()=>{
         setvisible(true)
     }
-    const handleOk=()=>{
+    const hideModal=()=>{
         setvisible(false)
+        setrowData([])
     }
-    const handleCancel=()=>{
-        setvisible(false)
+    const [rowData,setrowData]=useState([])
+    const changeRow=(data)=>{
+        setvisible(true)
+        setrowData(data)
     }
-    const onFinish = (value) => {
-        console.log(value);
-        
-    };
-    console.log(props)
     return(
         <div className="container">
             <div className="table-edit">
-                <Button type="primary" onClick={()=>{showModel()}}>新增</Button>
+                <Button type="primary" onClick={()=>{showModal()}}>新增</Button>
             </div>
             <Table dataSource={dataSource} columns={columns} />;
+            <ModalForm visible={visible} onCancel={hideModal} rowData={rowData}></ModalForm>
+        </div>
+    )
+}
+//新增弹窗组件
+function ModalForm({ visible, onCancel,rowData }){
+    console.log(rowData)
+    const [form] = Form.useForm();
+    const prevVisibleRef = useRef();
+    useEffect(() => {
+        prevVisibleRef.current = visible;
+    }, [visible]);
+    const prevVisible=prevVisibleRef.current
+    useEffect(() => {
+        //关闭弹窗时重置表单
+        if (!visible && prevVisible) {
+            form.resetFields();
+        }
+    }, [visible]);
+    const onOk = () => {
+      form.submit();
+    };
+    //表单提交
+    const onFinish=(value)=>{
+        console.log(value)
+        onCancel()
+    }
+    //获取当前选择行的数据
 
-            <Modal
+    return(
+        <Modal
             title="新增权限"
             visible={visible}
-            onOk={handleOk}
-            onCancel={handleCancel}
+            onOk={onOk}
+            onCancel={onCancel}
             okText="确认"
             cancelText="取消"
             >
                 <Form
+                form={form} 
                 name="normal_login"
                 className="login-form"
                 onFinish={onFinish}
                 >
-                    <Form.Item name="limitName" rules={[{required: true,message: '请输入权限名称!'}]}>
-                        <InputEvent/>
+                    <Form.Item label="权限名称" name="limitName" rules={[{required: true,message: '请输入权限名称!'}]}>
+                        <Input value={rowData.limitName||''}/>
                     </Form.Item>
-                    <Form.Item name="limitContent" rules={[{required: true,message: '请输入权限内容!'}]}>
-                        <Input/>
+                    <Form.Item label="权限内容" name="limitContent" rules={[{required: true,message: '请输入权限内容!'}]}>
+                        <Input value="55"/>
                     </Form.Item>
-                    <Form.Item name="limitType" label="权限类型" rules={[{ required: true }]}>
+                    <Form.Item name="limitType" label="权限类型" rules={[{ required: true ,message: '请选择权限类型!'}]}>
                         <Select placeholder="请选择">
                             <Option value="1">页面权限</Option>
                             <Option value="2">数据权限</Option>
                             <Option value="3">操作权限</Option>
                         </Select>
                     </Form.Item>
-                    <Form.Item>
-                        <Button type="primary" htmlType="submit" className="login-form-button">登录</Button>
-                    </Form.Item>
                 </Form>
-            </Modal>
-        </div>
+        </Modal>
     )
 }
 export default withRouter(Limit)

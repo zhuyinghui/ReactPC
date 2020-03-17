@@ -1,7 +1,7 @@
-import axios from './axios'
+import axios2 from './axios' 
 
     let getLimit=()=>{
-        return axios.get('/limits')
+        return axios2.get('/limits')
     }
     let addLimit=(data)=>{
         console.log(data);
