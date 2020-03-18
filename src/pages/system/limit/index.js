@@ -1,19 +1,42 @@
 import React from 'react'
 import { useState,useEffect,useRef } from 'react'
-import { Table,Button,Modal,Form,Input,Select } from 'antd'
-import { getLimit } from '../../../static/js/limitReq'
+import { Table,Button,Modal,Form,Input,Select,message } from 'antd'
+import axios from '../../../static/js/axios'
 import { withRouter } from 'react-router-dom'
-const { Option } = Select;
+import { ExclamationCircleOutlined } from '@ant-design/icons'
+const { Option } = Select
+const { confirm } = Modal
 
 function Limit(){
     const [dataSource,setdataSource]=useState([]) //表格数据
-    useEffect(()=>{
-        getLimit().then(res=>{
+    //获取权限
+    const getTableData=()=>{
+        axios.get('/limits').then(res=>{
             for(let i of res){
                 i.key=i._id
             }
             setdataSource(res)
         })
+    }
+    const deleteTableData=(data)=>{
+        confirm({
+            title: '提示',
+            icon: <ExclamationCircleOutlined />,
+            content: '确认删除这条数据？',
+            okText: '确认',
+            okType: 'danger',
+            cancelText: '取消',
+            onOk() {
+              console.log('OK');
+              axios.delete('/limits?_id='+data._id).then(()=>{
+                  message.success('权限删除成功')
+                  getTableData()
+              })
+            }
+          });
+    }
+    useEffect(()=>{
+        getTableData()
     },[])
     const columns = [
         {
@@ -46,37 +69,41 @@ function Limit(){
             render: (data) => (
                 <span>
                     <Button type="primary" size="small" onClick={()=>changeRow(data)}>修改</Button>
-                    <Button type="primary" size="small" danger>删除</Button>
+                    <Button type="primary" size="small" onClick={()=>deleteTableData(data)} danger>删除</Button>
                 </span>
             ),
         }
     ]
     const [visible,setvisible]=useState(false) //新增弹窗是否可见
-    const showModal=()=>{
-        setvisible(true)
-    }
+    const [title,settitle]=useState('')
     const hideModal=()=>{
         setvisible(false)
-        setrowData([])
+        setrowData({})
     }
-    const [rowData,setrowData]=useState([])
+    const [rowData,setrowData]=useState({})
+    //新增权限
+    const addRow=()=>{
+        setvisible(true)
+        settitle('新增权限')
+    }
+    //修改权限
     const changeRow=(data)=>{
         setvisible(true)
         setrowData(data)
+        settitle('修改权限')
     }
     return(
         <div className="container">
             <div className="table-edit">
-                <Button type="primary" onClick={()=>{showModal()}}>新增</Button>
+                <Button type="primary" onClick={()=>{addRow()}}>新增</Button>
             </div>
             <Table dataSource={dataSource} columns={columns} />;
-            <ModalForm visible={visible} onCancel={hideModal} rowData={rowData}></ModalForm>
+            <ModalForm visible={visible} onCancel={hideModal} rowData={rowData} title={title} getTableData={getTableData}></ModalForm>
         </div>
     )
 }
 //新增弹窗组件
-function ModalForm({ visible, onCancel,rowData }){
-    console.log(rowData)
+function ModalForm({ visible, onCancel,rowData,title,getTableData }){
     const [form] = Form.useForm();
     const prevVisibleRef = useRef();
     useEffect(() => {
@@ -94,14 +121,34 @@ function ModalForm({ visible, onCancel,rowData }){
     };
     //表单提交
     const onFinish=(value)=>{
-        console.log(value)
+        if(rowData._id){
+            value._id=rowData._id
+            //修改权限接口
+            axios.put('/limits',value).then(()=>{
+                message.success('权限修改成功')
+                getTableData()
+            })
+        }else{
+            //新增权限接口
+            axios.post('/limits',value).then(()=>{
+                message.success('权限新增成功')
+                getTableData()
+            })
+        }
         onCancel()
     }
-    //获取当前选择行的数据
+    //数据回填
+    if(Object.keys(rowData).length>0){
+        form.setFieldsValue({
+            'limitName':rowData.limitName,
+            'limitContent':rowData.limitContent,
+            'limitType':new Number(rowData.limitType).toString()
+        })
+    }
 
     return(
         <Modal
-            title="新增权限"
+            title={title}
             visible={visible}
             onOk={onOk}
             onCancel={onCancel}
@@ -115,10 +162,10 @@ function ModalForm({ visible, onCancel,rowData }){
                 onFinish={onFinish}
                 >
                     <Form.Item label="权限名称" name="limitName" rules={[{required: true,message: '请输入权限名称!'}]}>
-                        <Input value={rowData.limitName||''}/>
+                        <Input/>
                     </Form.Item>
                     <Form.Item label="权限内容" name="limitContent" rules={[{required: true,message: '请输入权限内容!'}]}>
-                        <Input value="55"/>
+                        <Input/>
                     </Form.Item>
                     <Form.Item name="limitType" label="权限类型" rules={[{ required: true ,message: '请选择权限类型!'}]}>
                         <Select placeholder="请选择">

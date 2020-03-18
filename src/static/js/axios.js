@@ -15,7 +15,7 @@ instance.interceptors.response.use( (response)=> {
             return
         }
     }else{
-        message.error('http状态非200：'+response.status)
+        message.error('http请求错误，状态码：'+response.status)
         return
     }
   },  (error)=> {
